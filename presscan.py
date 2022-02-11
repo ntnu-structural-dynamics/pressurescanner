@@ -13,6 +13,7 @@ import struct
 
 ###
 
+
 def readdatfile(filename,folder='',N_frame=5e5):
    
     # Inputs:
@@ -31,21 +32,25 @@ def readdatfile(filename,folder='',N_frame=5e5):
         folder_str=''
     else:
         folder_str=folder + '\\'
-   
+            
     # Extension
     if filename[-4:]!='.dat':
         filename=filename + '.dat'
 
     file=folder_str + filename
     
-    
     N_frame=int(N_frame)
-    
     
     # Check if file exists
     if not os.path.isfile(file):
         raise Exception(' ***** The scanner file ' + file + ' is not found')
 
+
+    GB_mem_req=8*N_frame*87/1e9
+    
+    if GB_mem_req>3:
+        print('***** Required memory for pressure data is ' + str(GB_mem_req) + ' GB' )
+        print('***** Consider reducing N_frame to save memory')
 
     # Preallocate matrices
     part_1 = np.zeros((4,N_frame)).astype('int') # packet type, packet size, frame number, scan type
@@ -57,17 +62,20 @@ def readdatfile(filename,folder='',N_frame=5e5):
     part_7 = np.zeros((72, N_frame)) # temperatures (x8), pressures (x64)
     part_8 = np.zeros((4, N_frame)).astype('int') # frame time (sec), frame time (ns), external trigger time (sec), external trigger time (ns)
 
-   
     fid = open(file, "rb")
     
+    # Break
     DoBreak=False
+    
+    # Loop over all frames (time step)
     for k in range(N_frame):
-   
+        
+        # Read 4 bytes at a time, total 87 times  
         
         for j in range(4):
             byte = fid.read(4)
             
-            # Check if byte is empty, then file is at end and loop is broken
+            # If byte is empty, then break loop
             if not byte:
                 DoBreak=True
                 break
@@ -110,6 +118,7 @@ def readdatfile(filename,folder='',N_frame=5e5):
         
     fid.close()
     
+    # If number of frames was overspecified, then cut where file stops
     if DoBreak:
         part_1=part_1[:,0:N_frame_stop+1]
         part_2=part_2[:,0:N_frame_stop+1]
@@ -132,4 +141,4 @@ def readdatfile(filename,folder='',N_frame=5e5):
     temp = scan_data[:,11:18]
     pres = scan_data[:,19:82]
 
-    return (t_frame, t_trig, pres, temp,scan_data)
+    return (t_frame,t_trig,pres,temp,scan_data)
