@@ -45,7 +45,6 @@ def readdatfile(filename,folder='',N_frame=5e5):
     if not os.path.isfile(file):
         raise Exception(' ***** The scanner file ' + file + ' is not found')
 
-
     GB_mem_req=8*N_frame*87/1e9
     
     if GB_mem_req>3:
@@ -138,7 +137,7 @@ def readdatfile(filename,folder='',N_frame=5e5):
     t_trig = scan_data[:,86-1] + scan_data[:,87-1]/1e9 #Time the external trigger occurred , Time in s plus time in ns
     
     # Temperature and pressure
-    temp = scan_data[:,11:18]
-    pres = scan_data[:,19:82]
+    temp = scan_data[:,11:19]
+    pres = scan_data[:,19:83]
 
     return (t_frame,t_trig,pres,temp,scan_data)
